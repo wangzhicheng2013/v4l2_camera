@@ -236,18 +236,20 @@ void stop_stream(int fd) {
         printf("disconnect mmap!\n");
     }
 }
-int main() {
+int main(int argc, char *argv[]) {
     signal(SIGTERM, set_exit_flag);
     signal(SIGINT, set_exit_flag);
     int value = 0;
-    printf("input max dump images count:(default value is 10, max value is 100)\n");
-    scanf("%d", &value);
+    printf("please run with ./v4l2_test value --- value is the input max dump images count:(default value is 10, max value is 100)\n");
+    if (argc > 2) {
+        value = atoi(argv[1]);
+    }
     if (value > 0 && value <= 100) {
         DUMP_IMAGE_MAX = value;
         printf("dump images count is:%d\n", DUMP_IMAGE_MAX);
     }
     else {
-        printf("input error!\n");
+        printf("dump images count is over 100!\n");
     }
     printf("all dump uyvy images will be stored in /data/\n");
     int fd = get_camera_dev_fd();
@@ -275,6 +277,7 @@ int main() {
     get_frame(fd);
     stop_stream(fd);
     close(fd);
+    printf("fd:%d is closed!\n", fd);
 
     return 0;
 }
