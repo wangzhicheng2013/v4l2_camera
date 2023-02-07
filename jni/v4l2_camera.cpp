@@ -171,9 +171,11 @@ bool v4l2_camera::get_frame() {
         printf("error:%s\n", strerror(errno));
         return false;
     }
+    bool success = false;
     if (readbuffer.index >= 0 && readbuffer.index < BUFFER_NUM) {
         if (frame_len == size_[readbuffer.index]) {
             memcpy(frame, mptr_[readbuffer.index], frame_len);
+            success = true;
         }
         else {
             printf("get frame addr:%p,error frame len:%d\n", mptr_[readbuffer.index], size_[readbuffer.index]);
@@ -190,7 +192,7 @@ bool v4l2_camera::get_frame() {
         printf("error:%s\n", strerror(errno));
         return false;
     }
-    return true;
+    return success;
 }
 void v4l2_camera::stop_stream() {
     int type = CAPTURE_TYPE;
@@ -214,6 +216,7 @@ void v4l2_camera::free_frame() {
     if (frame != nullptr) {
         free(frame);
         frame = nullptr;
+        frame_len = 0;
     }
 }
 int v4l2_camera::init() {
