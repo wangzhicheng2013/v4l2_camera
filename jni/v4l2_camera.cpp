@@ -210,7 +210,7 @@ void v4l2_camera::stop_stream() {
         printf("disconnect mmap!\n");
     }
 }
-bool v4l2_camera::free_frame() {
+void v4l2_camera::free_frame() {
     if (frame != nullptr) {
         free(frame);
         frame = nullptr;
