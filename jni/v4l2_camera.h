@@ -65,7 +65,7 @@ private:
     bool start_stream();
     void dump_images(const char *ptr, size_t len);
     void stop_stream();
-    bool free_frame();
+    void free_frame();
 public:
     char *frame = nullptr;
     size_t frame_len = 0;
