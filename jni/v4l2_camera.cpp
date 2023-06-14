@@ -171,6 +171,15 @@ bool v4l2_camera::get_frame() {
         printf("error:%s\n", strerror(errno));
         return false;
     }
+    ret = ioctl(fd_, VIDIOC_QUERYBUF, &readbuffer);
+    if (ret < 0) {
+        printf("query buf failed!\n");
+        printf("error:%s\n", strerror(errno));
+        return false;
+    }
+    if (V4L2_BUF_FLAG_DONE != readbuffer.flags) {       // V4L2_BUF_FLAG_DONE means that frame is ready
+        return false;
+    }
     bool success = false;
     if (readbuffer.index >= 0 && readbuffer.index < BUFFER_NUM) {
         if (frame_len == size_[readbuffer.index]) {
