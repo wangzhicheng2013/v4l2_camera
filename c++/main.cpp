@@ -12,22 +12,11 @@
 #include <linux/videodev2.h>
 #include <iostream>
 #include <string>
-const char *DEVNAME = "/dev/video1";
-const int DEV_LEN = 13;
+
+const char *DEVNAME = "/dev/video6cif";
+const int DEV_LEN = 1;
 const char *DEVNAMES[DEV_LEN] = {
-    "/dev/v4l-subdev0",
-    "/dev/v4l-subdev1",
-    "/dev/v4l-subdev2",
-    "/dev/v4l-subdev3",
-    "/dev/v4l-subdev4",
-    "/dev/v4l-subdev5",
-    "/dev/video1",
-    "/dev/video-disp0",
-    "/dev/video-dvr2",
-    "/dev/video-dvr3",
-    "/dev/video-dvr4",
-    "/dev/video-dvr5",
-    "/dev/video-evs6"
+    "/dev/video6cif",
 };
 const int CAPTURE_TYPE = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
 const int MEMORY_TYPE = V4L2_MEMORY_MMAP;
