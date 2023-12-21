@@ -46,10 +46,11 @@ public:
             memcpy(frame, mptr_[readbuffer.index], frame_len);
             if (true == dump_image_flag_) {
                 if (V4L2_PIX_FMT_UYVY == camera_pixelformat_) {
-                    dump_images((const char *)(mptr_[readbuffer.index]), frame_len, ".uyvy");    
+                    // must offset 64 bytes
+                    dump_images((const char *)(mptr_[readbuffer.index] + 64), frame_len, "uyvy");    
                 }
                 else {
-                    dump_images((const char *)(mptr_[readbuffer.index]), frame_len, ".yuyv"); 
+                    dump_images((const char *)(mptr_[readbuffer.index]), frame_len, "yuyv"); 
                 }
             }
         }
@@ -68,34 +69,33 @@ public:
     }
 private:
     int bind_mmap() {
-        struct v4l2_buffer mapbuffer;
-        for (unsigned int n_buffers = 0;n_buffers < BUFFER_NUM;++n_buffers) {
-            struct v4l2_plane plane[VIDEO_MAX_PLANES] = {};
-            memset(&mapbuffer, 0, sizeof(mapbuffer));
-            mapbuffer.type = CAPTURE_TYPE;
-            mapbuffer.memory = V4L2_MEMORY_MMAP;
-            mapbuffer.index = n_buffers;
-            mapbuffer.length = 1;
-            mapbuffer.m.planes = plane;     // must set             
-            // The query sequence number is n_ Buffer, get its starting physical address and size
-            if (ioctl(video_device_fd_, VIDIOC_QUERYBUF, &mapbuffer) < 0) {
-                printf("----VIDIOC_QUERYBUF-fail!------\n");
-                printf("error:%s\n", strerror(errno));
-                return -1;
+        for (int i = 0; i < BUFFER_NUM; i++) {
+            struct v4l2_buffer buf = {};
+            struct v4l2_plane planes = {};
+            //memset(&buf, 0, sizeof(buf));
+            //memset(&planes, 0, sizeof(planes));
+            buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+            buf.memory = V4L2_MEMORY_MMAP;
+            buf.index = i;
+            buf.m.planes = &planes;
+            buf.length = 1;
+            int ret = ioctl(video_device_fd_, VIDIOC_QUERYBUF, &buf);
+            if (ret) {
+                printf("[%s]query buffer failed:%s\n", __func__, strerror(errno));
+                return ret;
             }
-            printf("----VIDIOC_QUERYBUF-success!------\n");
-            size_[n_buffers] = mapbuffer.m.planes[0].length;
+            size_[i] = buf.m.planes[0].length;  // it is 1600 * 1300 * 2 + 64
             // mapped memory
-            mptr_[n_buffers] = (unsigned char *)mmap(NULL, size_[n_buffers], 
+            mptr_[i] = (unsigned char *)mmap(NULL, size_[i],
                                             PROT_READ | PROT_WRITE, MAP_SHARED, video_device_fd_,
-                                            mapbuffer.m.planes[0].m.mem_offset);
-            if (nullptr == mptr_[n_buffers]) {
+                                            buf.m.planes[0].m.mem_offset);
+            if (nullptr == mptr_[i]) {
                 printf("----MMAP-fail!------\n");
                 return -2;
             }
             // VIDIOC_QBUF  // put the frame in the queue
             // VIDIOC_DQBUF // remove frame from queue
-            if (ioctl (video_device_fd_, VIDIOC_QBUF, &mapbuffer) < 0) {
+            if (ioctl (video_device_fd_, VIDIOC_QBUF, &buf) < 0) {
                 printf("----------frame put into queue failed------------\n");
                 printf("error:%s\n", strerror(errno));
                 return -3;

@@ -13,8 +13,12 @@
 #include <linux/videodev2.h>
 #include <iostream>
 #include <string>
-
-static const char *DEV_NAME = "/dev/video6cif";
+// use dmesg 
+// adb root
+// adb shell
+// dmesg > tt.log
+// "_max96722_i2c_write_a16r16:write reg error: reg=a007, val=131a, retry = 0" will be error
+static const char *DEV_NAME = "/dev/video21cif";
 static const int CAPTURE_TYPE = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
 static const int MMAP_MEMORY_TYPE = V4L2_MEMORY_MMAP;
 static const int USERPTR_MEMORY_TYPE = V4L2_MEMORY_USERPTR;
@@ -121,18 +125,16 @@ protected:
         int ret = ioctl(video_device_fd_, VIDIOC_QUERYCAP, &cap);
         if (ret < 0) {
             printf("%s ioctl fail, error:%s\n", video_device_path_, strerror(errno));
-            return false;
+            return true;
         }
         printf("%s ioctl success!\n", video_device_path_);
         printf("Driver Name:%s\nCard Name:%s\nBus info:%s\nDriver Version:%u.%u.%u\n"
         ,cap.driver, cap.card, cap.bus_info, (cap.version >> 16) & 0XFF, (cap.version >> 8) & 0XFF, cap.version & 0XFF);
         if (!(cap.capabilities & CAPTURE_TYPE)) {
             printf("V4L2_CAP_VIDEO_CAPTURE_MPLANE not supported!\n");
-            return false;
         }
         if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
             printf("V4L2_CAP_STREAMING not supported!\n");
-            return false;
         }
         return true;
     }
@@ -165,12 +167,12 @@ protected:
         return true;
     }
     bool set_camera_format() {
-        struct v4l2_format vfmt; 
+        struct v4l2_format vfmt = {}; 
         vfmt.type = CAPTURE_TYPE;          // set type camera acquisition
         vfmt.fmt.pix.pixelformat = camera_pixelformat_;          
         vfmt.fmt.pix.width = camera_width_;
         vfmt.fmt.pix.height = camera_height_;
-        vfmt.fmt.pix.field = V4L2_FIELD_ANY;  // must set
+        //vfmt.fmt.pix.field = V4L2_FIELD_ANY;
         int ret = ioctl(video_device_fd_, VIDIOC_S_FMT, &vfmt);
         if (ret < 0) {
             printf("---------set camera format failed!--------\n");
